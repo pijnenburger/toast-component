@@ -3,14 +3,15 @@ import React from "react";
 import Button from "../Button";
 import styles from "./ToastPlayground.module.css";
 import ToastShelf from "../ToastShelf/ToastShelf";
+import { ToastContext } from "../ToastProvider/ToastProvider";
+
 const VARIANT_OPTIONS = ["notice", "warning", "success", "error"];
 
 function ToastPlayground() {
-  const [message, setMessage] = React.useState("This is a toast message");
-  const [variant, setVariant] = React.useState("notice");
-  // const [viewToast, setViewToast] = React.useState(false);
+  const { addToast } = React.useContext(ToastContext);
 
-  const [toasts, setToasts] = React.useState([]);
+  const [message, setMessage] = React.useState("This is a toast message");
+  const [variant, setVariant] = React.useState(VARIANT_OPTIONS[0]);
 
   function variantHandler(event) {
     setVariant(event.target.value);
@@ -22,29 +23,33 @@ function ToastPlayground() {
     // console.log(event.target.value);
   }
 
-  function resetForm() {
-    setMessage("");
-    setVariant("notice");
-  }
-
-  function addToast(event) {
+  function submitForm(event) {
     if (message === "") {
       return;
     }
     event.preventDefault();
-    const newToast = { message, variant, id: crypto.randomUUID() };
-    const nextToasts = [...toasts, newToast];
-    setToasts(nextToasts);
-
-    resetForm();
+    addToast(message, variant);
+    setMessage("");
+    setVariant(VARIANT_OPTIONS[0]);
   }
 
-  function removeToast(id) {
-    const nextToasts = toasts.filter((toast) => {
-      return toast.id !== id;
-    });
-    setToasts(nextToasts);
-  }
+  const dynamicColor = React.useMemo(() => {
+    const minValue = 0;
+    const maxValue = 100;
+    const minColor = [153, 153, 153]; // [R, G, B]
+    const maxColor = [255, 0, 0]; // [R, G, B]
+
+    // Map the message.length value to the corresponding color
+    const proportionalValue =
+      (message.length - minValue) / (maxValue - minValue);
+
+    // Interpolate between the minColor and maxColor
+    const interpolatedColor = minColor.map((channel, index) =>
+      Math.floor(channel + proportionalValue * (maxColor[index] - channel))
+    );
+
+    return `rgba(${interpolatedColor.join(", ")})`;
+  }, [message]);
 
   return (
     <div className={styles.wrapper}>
@@ -52,12 +57,12 @@ function ToastPlayground() {
         <img alt="Cute toast mascot" src="/toast.png" />
         <h1>Toast Playground</h1>
       </header>
-      <ToastShelf toasts={toasts} removeToast={removeToast} />
+      <ToastShelf />
 
       {/* {viewToast && (
         <Toast toggleToast={toggleToast} variant={variant} />
       )} */}
-      <form className={styles.controlsWrapper} onSubmit={addToast}>
+      <form className={styles.controlsWrapper} onSubmit={submitForm}>
         <div className={styles.row}>
           <label
             htmlFor="message"
@@ -71,11 +76,16 @@ function ToastPlayground() {
               required={true}
               onChange={messageHandler}
               id="message"
-              minLength={1}
               maxLength={100}
               value={message}
               className={styles.messageInput}
             />
+            <p
+              className={styles.counter}
+              style={{ fontSize: "12px", color: dynamicColor }}
+            >
+              {message.length}/100
+            </p>
           </div>
         </div>
 
@@ -105,7 +115,7 @@ function ToastPlayground() {
         <div className={styles.row}>
           <div className={styles.label} />
           <div className={`${styles.inputWrapper} ${styles.radioWrapper}`}>
-            <Button onClick={addToast}>Pop Toast!</Button>
+            <Button onClick={submitForm}>Pop Toast!</Button>
           </div>
         </div>
       </form>

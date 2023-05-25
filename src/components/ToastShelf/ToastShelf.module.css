@@ -1,10 +1,11 @@
-@keyframes toast {
+@keyframes slide-in {
   from {
     transform: translateX(calc(100% + 64px));
   }
 }
 
 .wrapper {
+  z-index: 1;
   position: fixed;
   right: 0;
   bottom: 0;
@@ -16,6 +17,6 @@
 }
 
 .toastWrapper {
-  animation: toast 800ms cubic-bezier(0, 0.46, 0, 1.04) both;
+  animation: slide-in 800ms cubic-bezier(0, 0.46, 0, 1.04) both;
   will-change: transform;
 }
