@@ -2,14 +2,15 @@ import React from "react";
 
 import Button from "../Button";
 import styles from "./ToastPlayground.module.css";
-import Toast from "../Toast/Toast";
-
+import ToastShelf from "../ToastShelf/ToastShelf";
 const VARIANT_OPTIONS = ["notice", "warning", "success", "error"];
 
 function ToastPlayground() {
-  const [message, setMessage] = React.useState("");
+  const [message, setMessage] = React.useState("This is a toast message");
   const [variant, setVariant] = React.useState("notice");
-  const [viewToast, setViewToast] = React.useState(false);
+  // const [viewToast, setViewToast] = React.useState(false);
+
+  const [toasts, setToasts] = React.useState([]);
 
   function variantHandler(event) {
     setVariant(event.target.value);
@@ -21,9 +22,29 @@ function ToastPlayground() {
     // console.log(event.target.value);
   }
 
-  const toggleToast = React.useCallback(() => {
-    setViewToast((currentValue) => !currentValue);
-  }, []);
+  function resetForm() {
+    setMessage("");
+    setVariant("notice");
+  }
+
+  function addToast(event) {
+    if (message === "") {
+      return;
+    }
+    event.preventDefault();
+    const newToast = { message, variant, id: crypto.randomUUID() };
+    const nextToasts = [...toasts, newToast];
+    setToasts(nextToasts);
+
+    resetForm();
+  }
+
+  function removeToast(id) {
+    const nextToasts = toasts.filter((toast) => {
+      return toast.id !== id;
+    });
+    setToasts(nextToasts);
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -31,10 +52,12 @@ function ToastPlayground() {
         <img alt="Cute toast mascot" src="/toast.png" />
         <h1>Toast Playground</h1>
       </header>
-      {viewToast && (
-        <Toast toggleToast={toggleToast} message={message} variant={variant} />
-      )}
-      <div className={styles.controlsWrapper}>
+      <ToastShelf toasts={toasts} removeToast={removeToast} />
+
+      {/* {viewToast && (
+        <Toast toggleToast={toggleToast} variant={variant} />
+      )} */}
+      <form className={styles.controlsWrapper} onSubmit={addToast}>
         <div className={styles.row}>
           <label
             htmlFor="message"
@@ -45,8 +68,11 @@ function ToastPlayground() {
           </label>
           <div className={styles.inputWrapper}>
             <textarea
+              required={true}
               onChange={messageHandler}
               id="message"
+              minLength={1}
+              maxLength={100}
               value={message}
               className={styles.messageInput}
             />
@@ -73,18 +99,16 @@ function ToastPlayground() {
                 </label>
               );
             })}
-
-            {/* TODO Other Variant radio buttons here */}
           </div>
         </div>
 
         <div className={styles.row}>
           <div className={styles.label} />
           <div className={`${styles.inputWrapper} ${styles.radioWrapper}`}>
-            <Button onClick={toggleToast}>Pop Toast!</Button>
+            <Button onClick={addToast}>Pop Toast!</Button>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
